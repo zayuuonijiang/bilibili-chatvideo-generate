@@ -41,6 +41,12 @@ public class BashboardController {
     @Value("${app.storage.result-dir:Result}")
     private String resultDirPath;
 
+    @Value("${app.storage.background-image-file:runtime-data/background/current-background.img}")
+    private String backgroundImageFilePath;
+
+    @Value("${app.storage.background-fallback-file:src/main/webapp/static/bg-placeholder.jpg}")
+    private String backgroundFallbackFilePath;
+
     /**
      * 仪表盘首页。
      */
@@ -66,6 +72,62 @@ public class BashboardController {
     public String videoManagePage(Model model) {
         model.addAttribute("title", "视频管理 - 仪表盘风格");
         return "video-manage";
+    }
+
+    /**
+     * 首页背景图上传：上传后覆盖当前背景图。
+     */
+    @PostMapping(value = "/api/background/upload", produces = "application/json")
+    @ResponseBody
+    public Result<java.util.Map<String, String>> uploadBackgroundImage(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return Result.fail(400, "上传失败：请选择图片文件");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.toLowerCase(java.util.Locale.ROOT).startsWith("image/")) {
+            return Result.fail(400, "上传失败：仅支持图片文件");
+        }
+
+        java.nio.file.Path target = java.nio.file.Paths.get(backgroundImageFilePath).toAbsolutePath().normalize();
+        try {
+            java.nio.file.Path parent = target.getParent();
+            if (parent != null) {
+                java.nio.file.Files.createDirectories(parent);
+            }
+            try (java.io.InputStream in = file.getInputStream()) {
+                java.nio.file.Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            java.util.Map<String, String> data = new java.util.LinkedHashMap<>();
+            data.put("url", "/api/background/current?ts=" + System.currentTimeMillis());
+            data.put("message", "背景图上传成功");
+            return Result.ok(data);
+        } catch (Exception e) {
+            log.warn("背景图上传失败", e);
+            return Result.fail(500, "上传失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取当前背景图：优先使用用户上传图，未上传时回退到默认背景图。
+     */
+    @GetMapping(value = "/api/background/current")
+    public ResponseEntity<Resource> getCurrentBackgroundImage() {
+        try {
+            java.nio.file.Path uploaded = java.nio.file.Paths.get(backgroundImageFilePath).toAbsolutePath().normalize();
+            if (java.nio.file.Files.exists(uploaded) && java.nio.file.Files.isRegularFile(uploaded)) {
+                return buildBackgroundResponse(uploaded);
+            }
+
+            java.nio.file.Path fallback = java.nio.file.Paths.get(backgroundFallbackFilePath).toAbsolutePath().normalize();
+            if (java.nio.file.Files.exists(fallback) && java.nio.file.Files.isRegularFile(fallback)) {
+                return buildBackgroundResponse(fallback);
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.warn("读取背景图失败", e);
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
@@ -1051,6 +1113,26 @@ public class BashboardController {
                 writer.newLine();
             }
         }
+    }
+
+    private ResponseEntity<Resource> buildBackgroundResponse(java.nio.file.Path filePath) {
+        String contentType = null;
+        try {
+            contentType = java.nio.file.Files.probeContentType(filePath);
+        } catch (Exception ignore) {
+            // ignore
+        }
+        if (contentType == null || !contentType.toLowerCase(java.util.Locale.ROOT).startsWith("image/")) {
+            contentType = "image/jpeg";
+        }
+
+        Resource resource = new FileSystemResource(filePath.toFile());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
     }
 }
 

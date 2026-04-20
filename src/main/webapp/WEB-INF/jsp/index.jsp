@@ -8,30 +8,36 @@
     <title>${title}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --panel-bg: rgba(255, 255, 255, 0.68);
+            --panel-border: rgba(255, 255, 255, 0.5);
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.15);
+        }
         body {
             font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
             min-height: 100vh;
-            color: #e6edf3;
+            color: var(--text-main);
             background:
-                    linear-gradient(135deg, rgba(5,10,25,0.9), rgba(10,20,50,0.9)),
-                    url('${pageContext.request.contextPath}/static/bg-placeholder.jpg') center/cover no-repeat fixed;
+                    linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.18)),
+                    url('${pageContext.request.contextPath}/api/background/current') center center / cover no-repeat fixed;
         }
         .app-layout {
             display: flex;
             min-height: 100vh;
-            backdrop-filter: blur(6px);
+            background: rgba(255,255,255,0.08);
         }
         .sidebar {
-            width: 230px;
-            padding: 1.5rem 1.25rem;
-            background: linear-gradient(190deg,
-                    rgba(15,23,42,0.78),
-                    rgba(15,23,42,0.55));
-            border-right: 1px solid rgba(148,163,184,0.35);
+            width: 240px;
+            padding: 1.5rem 1.1rem;
+            background: rgba(236, 244, 255, 0.72);
+            border-right: 1px solid rgba(255,255,255,0.55);
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            backdrop-filter: blur(14px);
+            backdrop-filter: blur(12px);
+            box-shadow: 8px 0 30px rgba(15, 23, 42, 0.08);
         }
         .sidebar-header {
             display: flex;
@@ -48,11 +54,11 @@
             font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.03em;
-            color: #ffffff;
+            color: #0f172a;
         }
         .nav-section-title {
             font-size: 0.75rem;
-            color: #e5e7eb;
+            color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 0.25rem;
@@ -67,8 +73,8 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 0.75rem;
-            border-radius: 999px;
-            color: #ffffff;
+            border-radius: 10px;
+            color: #1e293b;
             font-weight: 600;
             text-decoration: none;
             font-size: 0.88rem;
@@ -78,97 +84,131 @@
             flex: 1;
         }
         .nav-link:hover {
-            background: linear-gradient(90deg, rgba(56,189,248,0.12), rgba(129,140,248,0.12));
+            background: rgba(255,255,255,0.65);
             transform: translateX(2px);
         }
         .nav-link-active {
-            background: linear-gradient(90deg, rgba(56,189,248,0.25), rgba(129,140,248,0.25));
-            color: #f9fafb;
+            background: rgba(255,255,255,0.9);
+            color: #111827;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
         }
         .nav-footer {
             margin-top: auto;
             font-size: 0.75rem;
-            color: #64748b;
+            color: #334155;
+        }
+        .bg-upload-btn {
+            margin-top: 0.55rem;
+            width: 100%;
+            border: 1px solid rgba(203,213,225,0.95);
+            background: rgba(255,255,255,0.95);
+            color: #0f172a;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.45rem 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .bg-upload-btn:hover {
+            background: #ffffff;
+            border-color: rgba(148,163,184,0.9);
+            transform: translateY(-1px);
+        }
+        .bg-upload-msg {
+            margin-top: 0.45rem;
+            line-height: 1.45;
+            color: #334155;
+            font-size: 0.72rem;
+            min-height: 1rem;
+            word-break: break-word;
         }
         .main {
             flex: 1;
-            padding: 1.75rem 2rem;
+            padding: 1.6rem 1.8rem;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
         }
         .main-header {
-            margin-bottom: 1.25rem;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-soft);
         }
         .main-title {
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--text-main);
         }
         .main-subtitle {
             margin-top: 0.35rem;
             font-size: 0.9rem;
-            color: #9ca3af;
+            color: var(--text-sub);
         }
         .main-content {
             flex: 1;
             display: flex;
             align-items: flex-start;
-            justify-content: center;
+            justify-content: flex-start;
         }
         .card {
-            background: rgba(15,23,42,0.78);
+            background: var(--panel-bg);
             border-radius: 16px;
-            padding: 2rem;
-            max-width: 600px;
+            padding: 1.5rem;
+            max-width: 1100px;
             width: 100%;
-            box-shadow: 0 24px 80px rgba(15,23,42,0.9);
-            border: 1px solid rgba(148,163,184,0.35);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(12px);
         }
         h1 {
-            font-size: 1.4rem;
+            font-size: 1.28rem;
             font-weight: 600;
             margin-bottom: 0.75rem;
         }
         .welcome {
-            color: #9ca3af;
+            color: var(--text-sub);
             margin-bottom: 1.25rem;
             line-height: 1.6;
             font-size: 0.95rem;
         }
         .links {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
             gap: 0.75rem;
-            flex-wrap: wrap;
         }
         .links a {
             display: inline-block;
-            padding: 0.55rem 1.1rem;
-            background: #ffffff;
+            padding: 0.8rem 0.95rem;
+            background: rgba(255,255,255,0.92);
             color: #111827;
             font-weight: 600;
             text-decoration: none;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            border: 1px solid rgba(209,213,219,0.9);
+            border-radius: 10px;
+            font-size: 0.88rem;
+            border: 1px solid rgba(226,232,240,0.95);
             box-shadow: 0 0 0 rgba(15,23,42,0);
             transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, background-color 0.18s ease-out, color 0.18s ease-out;
         }
         .links a:hover {
-            transform: scale(1.04);
-            box-shadow: 0 14px 38px rgba(15,23,42,0.55);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(15,23,42,0.12);
             background: #f9fafb;
         }
         .status {
             margin-top: 1.3rem;
             padding: 0.75rem 0.9rem;
-            background: rgba(22,163,74,0.14);
+            background: rgba(255,255,255,0.78);
             border-radius: 12px;
-            font-size: 0.82rem;
-            color: #bbf7d0;
-            border: 1px solid rgba(74,222,128,0.45);
+            font-size: 0.84rem;
+            color: #334155;
+            border: 1px solid rgba(226,232,240,0.95);
         }
         .status span {
-            opacity: 0.85;
+            opacity: 0.95;
         }
         @media (max-width: 900px) {
             .app-layout {
@@ -186,12 +226,22 @@
                 flex-wrap: wrap;
             }
             .nav-link {
-                border-radius: 999px;
+                border-radius: 8px;
                 padding: 0.35rem 0.7rem;
                 font-size: 0.8rem;
             }
+            .bg-upload-btn {
+                width: auto;
+                min-width: 140px;
+            }
+            .bg-upload-msg {
+                display: none;
+            }
             .main {
                 padding: 1.25rem 1.25rem 1.75rem;
+            }
+            .links {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -225,6 +275,9 @@
         </div>
         <div class="nav-footer">
             <div>当前环境：本地开发</div>
+            <button type="button" id="bgUploadBtn" class="bg-upload-btn">上传替换背景图</button>
+            <input type="file" id="bgFileInput" accept="image/*" style="display:none;" />
+            <div id="bgUploadMsg" class="bg-upload-msg"></div>
         </div>
     </aside>
     <main class="main">
@@ -251,5 +304,63 @@
         </div>
     </main>
 </div>
+<script>
+    (function () {
+        var uploadBtn = document.getElementById('bgUploadBtn');
+        var fileInput = document.getElementById('bgFileInput');
+        var uploadMsg = document.getElementById('bgUploadMsg');
+        var contextPath = '${pageContext.request.contextPath}';
+
+        function setMsg(text, isError) {
+            uploadMsg.textContent = text || '';
+            uploadMsg.style.color = isError ? '#b91c1c' : '#334155';
+        }
+
+        function applyBackground(ts) {
+            var bgUrl = contextPath + '/api/background/current?ts=' + ts;
+            document.body.style.background =
+                'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.18)), ' +
+                'url(' + bgUrl + ') center center / cover no-repeat fixed';
+        }
+
+        uploadBtn.addEventListener('click', function () {
+            fileInput.value = '';
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function () {
+            if (!fileInput.files || !fileInput.files.length) {
+                return;
+            }
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+
+            uploadBtn.disabled = true;
+            setMsg('正在上传背景图，请稍候...', false);
+
+            fetch(contextPath + '/api/background/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(function (response) { return response.json(); })
+                .then(function (res) {
+                    if (res && res.code === 200) {
+                        var ts = Date.now();
+                        applyBackground(ts);
+                        setMsg('背景图替换成功。', false);
+                    } else {
+                        setMsg((res && res.message) ? res.message : '上传失败，请重试。', true);
+                    }
+                })
+                .catch(function (err) {
+                    setMsg('上传失败：' + (err && err.message ? err.message : err), true);
+                })
+                .finally(function () {
+                    uploadBtn.disabled = false;
+                });
+        });
+    })();
+</script>
 </body>
 </html>

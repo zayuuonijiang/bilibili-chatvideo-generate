@@ -8,30 +8,36 @@
     <title>${title}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --panel-bg: rgba(255, 255, 255, 0.68);
+            --panel-border: rgba(255, 255, 255, 0.5);
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.15);
+        }
         body {
             font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
             min-height: 100vh;
-            color: #e6edf3;
+            color: var(--text-main);
             background:
-                    linear-gradient(135deg, rgba(5,10,25,0.9), rgba(10,20,50,0.9)),
-                    url('${pageContext.request.contextPath}/static/bg-placeholder.jpg') center/cover no-repeat fixed;
+                    linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.18)),
+                    url('${pageContext.request.contextPath}/api/background/current') center center / cover no-repeat fixed;
         }
         .app-layout {
             display: flex;
             min-height: 100vh;
-            backdrop-filter: blur(6px);
+            background: rgba(255,255,255,0.08);
         }
         .sidebar {
-            width: 230px;
-            padding: 1.5rem 1.25rem;
-            background: linear-gradient(190deg,
-                    rgba(15,23,42,0.78),
-                    rgba(15,23,42,0.55));
-            border-right: 1px solid rgba(148,163,184,0.35);
+            width: 240px;
+            padding: 1.5rem 1.1rem;
+            background: rgba(236, 244, 255, 0.72);
+            border-right: 1px solid rgba(255,255,255,0.55);
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            backdrop-filter: blur(14px);
+            backdrop-filter: blur(12px);
+            box-shadow: 8px 0 30px rgba(15, 23, 42, 0.08);
             position: sticky;
             top: 0;
             align-self: flex-start;
@@ -53,11 +59,11 @@
             font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.03em;
-            color: #ffffff;
+            color: #0f172a;
         }
         .nav-section-title {
             font-size: 0.75rem;
-            color: #e5e7eb;
+            color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 0.25rem;
@@ -72,8 +78,8 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 0.75rem;
-            border-radius: 999px;
-            color: #ffffff;
+            border-radius: 10px;
+            color: #1e293b;
             font-weight: 600;
             text-decoration: none;
             font-size: 0.88rem;
@@ -83,104 +89,196 @@
             flex: 1;
         }
         .nav-link:hover {
-            background: linear-gradient(90deg, rgba(56,189,248,0.12), rgba(129,140,248,0.12));
+            background: rgba(255,255,255,0.65);
             transform: translateX(2px);
         }
         .nav-link-active {
-            background: linear-gradient(90deg, rgba(56,189,248,0.25), rgba(129,140,248,0.25));
-            color: #f9fafb;
+            background: rgba(255,255,255,0.9);
+            color: #111827;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
         }
         .nav-footer {
             margin-top: auto;
             font-size: 0.75rem;
-            color: #64748b;
+            color: #334155;
         }
         .main {
             flex: 1;
-            padding: 1.75rem 2rem;
+            padding: 1.6rem 1.8rem;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
         }
         .main-header {
-            margin-bottom: 1.25rem;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-soft);
         }
         .main-title {
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--text-main);
         }
         .main-subtitle {
             margin-top: 0.35rem;
             font-size: 0.9rem;
-            color: #9ca3af;
+            color: var(--text-sub);
         }
         .main-content {
             flex: 1;
-            max-width: 1200px;
+            width: 100%;
         }
         .wrap {
             max-width: 100%;
             margin: 0;
         }
+        .dashboard-row {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        .left-pane {
+            flex: 7 1 0;
+            min-width: 0;
+        }
+        .right-pane {
+            flex: 3 1 0;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: calc(100vh - 220px);
+        }
+        .right-pane .card {
+            margin-bottom: 0;
+        }
+        .right-scroll-list {
+            margin-top: 0.75rem;
+            max-height: 290px;
+            overflow: auto;
+            padding-right: 0.25rem;
+        }
+        .card-fill {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .quick-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
+            margin-top: 0.65rem;
+        }
+        .quick-item {
+            border: 1px solid rgba(226,232,240,0.95);
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 0.6rem 0.7rem;
+            font-size: 0.84rem;
+            color: #334155;
+        }
+        .quick-title {
+            color: #0f172a;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .progress-block {
+            margin-top: 0.8rem;
+        }
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(148,163,184,0.28);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 0.4rem;
+        }
+        .progress-value {
+            width: 36%;
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #22d3ee);
+        }
+        .card-links {
+            margin-top: 0.85rem;
+            display: grid;
+            gap: 0.5rem;
+        }
+        .card-link {
+            text-decoration: none;
+            color: #0c4a6e;
+            font-size: 0.84rem;
+            padding: 0.45rem 0.6rem;
+            border: 1px solid rgba(186,230,253,0.9);
+            border-radius: 8px;
+            background: rgba(240,249,255,0.9);
+            transition: all 0.2s;
+        }
+        .card-link:hover {
+            background: rgba(224,242,254,0.92);
+            transform: translateY(-1px);
+        }
         h1 {
             font-size: 1.5rem;
             margin-bottom: 0.8rem;
-            background: linear-gradient(90deg, #38bdf8, #a855f7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--text-main);
         }
-        .sub { color:#9ca3af;font-size:0.9rem;margin-bottom:1.3rem; }
+        .sub { color:var(--text-sub);font-size:0.9rem;margin-bottom:1.3rem; }
         .card {
-            background: rgba(15,23,42,0.82);
+            background: var(--panel-bg);
             border-radius: 16px;
             padding: 1.5rem 1.6rem;
             margin-bottom: 1.5rem;
-            border: 1px solid rgba(148,163,184,0.35);
-            box-shadow: 0 24px 80px rgba(15,23,42,0.9);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(12px);
         }
-        .card h2 { font-size: 1.02rem; color: #ffffff; font-weight: 600; margin-bottom: 0.75rem; }
-        label { display:block;margin-bottom:0.35rem;color:#9ca3af;font-size:0.9rem; }
+        .card h2 { font-size: 1.02rem; color: var(--text-main); font-weight: 600; margin-bottom: 0.75rem; }
+        label { display:block;margin-bottom:0.35rem;color:var(--text-sub);font-size:0.9rem; }
         input[type="text"], textarea, select {
             width: 100%;
             padding: 0.5rem 0.75rem;
             margin-bottom: 0.9rem;
             border-radius: 8px;
-            border: 1px solid rgba(148,163,184,0.55);
-            background: rgba(15,23,42,0.92);
-            color: #e5e7eb;
+            border: 1px solid rgba(203,213,225,0.95);
+            background: rgba(255,255,255,0.9);
+            color: #0f172a;
             font-size: 0.95rem;
         }
         textarea { min-height: 80px; resize: vertical; }
         input[type="file"] {
             width: 100%;
             margin-bottom: 0.9rem;
-            color:#e5e7eb;
+            color:#334155;
         }
         .row { display:flex;flex-wrap:wrap;gap:1rem; }
         .col { flex:1 1 260px; }
         .btn {
             display:inline-block;
             padding:0.55rem 1.15rem;
-            background:#ffffff;
+            background:rgba(255,255,255,0.95);
             color:#111827;
             font-weight:600;
-            border:1px solid rgba(209,213,219,0.9);
-            border-radius:999px;
+            border:1px solid rgba(203,213,225,0.95);
+            border-radius:10px;
             cursor:pointer;
             font-size:0.88rem;
             box-shadow: 0 0 0 rgba(15,23,42,0);
             transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, background-color 0.18s ease-out, color 0.18s ease-out;
         }
         .btn:hover {
-            transform: scale(1.04);
-            box-shadow: 0 14px 38px rgba(15,23,42,0.55);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(15,23,42,0.12);
             background:#f9fafb;
         }
         .btn:disabled { opacity:0.6;cursor:not-allowed;box-shadow:none; }
         .msg { margin-top:0.5rem;font-size:0.85rem;display:none; }
-        .msg.err { color:#fca5a5; }
-        .msg.ok { color:#4ade80; }
+        .msg.err { color:#b91c1c; }
+        .msg.ok { color:#166534; }
         #templateBox { width:100%;min-height:160px;resize:vertical; }
         .video-preview { margin-top:0.75rem; }
         #resultVideo { width:100%;max-height:360px;background:#000;display:none; }
@@ -200,12 +298,23 @@
                 flex-wrap: wrap;
             }
             .nav-link {
-                border-radius: 999px;
+                border-radius: 8px;
                 padding: 0.35rem 0.7rem;
                 font-size: 0.8rem;
             }
             .main {
                 padding: 1.25rem 1.25rem 1.75rem;
+            }
+            .dashboard-row {
+                flex-wrap: wrap;
+            }
+            .left-pane,
+            .right-pane {
+                flex: 1 1 100%;
+                min-width: 0;
+            }
+            .right-pane {
+                min-height: auto;
             }
         }
     </style>
@@ -248,8 +357,8 @@
         </div>
         <div class="main-content">
 <div class="wrap">
-    <div class="row">
-        <div class="col" style="flex:7 1 0;">
+    <div class="dashboard-row">
+        <div class="left-pane">
             <div class="card">
         <h2>步骤一：填写四个自定义可选框</h2>
         <form id="pipelineForm" enctype="multipart/form-data">
@@ -338,13 +447,13 @@
         </form>
             </div>
         </div>
-        <div class="col" style="flex:3 1 0;">
+        <div class="right-pane">
             <div class="card">
                 <h2>知乎问答总览</h2>
                 <p class="sub">从本地持久化文件中读取已抓取的问题与最高赞回答，点击问题可展开/收起详情。</p>
                 <button type="button" class="btn" id="loadQaOverviewBtn">加载总览</button>
                 <div id="qaOverviewMsg" class="msg"></div>
-                <div id="qaOverviewList" style="margin-top:0.75rem;max-height:360px;overflow:auto;"></div>
+                <div id="qaOverviewList" class="right-scroll-list"></div>
             </div>
 
             <div class="card">
@@ -354,7 +463,43 @@
                 <textarea id="zhihuHotCookie" placeholder="请粘贴你在知乎网页中复制的完整 Cookie" style="width:100%;min-height:80px;"></textarea>
                 <button type="button" class="btn" id="fetchHotQaBtn" style="margin-top:0.5rem;">抓取知乎热榜前 10 条问答</button>
                 <div id="hotQaMsg" class="msg"></div>
-                <div id="hotQaList" style="margin-top:0.75rem;max-height:360px;overflow:auto;"></div>
+                <div id="hotQaList" class="right-scroll-list"></div>
+            </div>
+
+            <div class="card card-fill">
+                <div>
+                    <h2>实时操作面板</h2>
+                    <p class="sub">右侧区域已填充为可持续浏览的操作区，帮助你在长流程中减少来回滚动。</p>
+
+                    <div class="quick-grid">
+                        <div class="quick-item">
+                            <div class="quick-title">当前建议</div>
+                            先上传跑酷视频与角色A音频，再填写标题与高赞回答，模板质量会更稳定。
+                        </div>
+                        <div class="quick-item">
+                            <div class="quick-title">双人模式提醒</div>
+                            选择“双人视频模式”后，务必补齐角色B音频与角色B显示名称。
+                        </div>
+                        <div class="quick-item">
+                            <div class="quick-title">字幕预检</div>
+                            先在“示意字幕内容”里看换行和立绘位置，再发起最终合成，可减少返工。
+                        </div>
+                    </div>
+
+                    <div class="progress-block">
+                        <div class="quick-title">流程完成度（参考）</div>
+                        <div style="font-size:0.82rem;color:#9ca3af;">已进入模板生成与参数校正阶段</div>
+                        <div class="progress-track">
+                            <div class="progress-value"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-links">
+                    <a class="card-link" href="#" onclick="document.getElementById('generateTemplateBtn').scrollIntoView({behavior:'smooth', block:'center'});return false;">定位到「步骤一：生成模板」</a>
+                    <a class="card-link" href="#" onclick="document.getElementById('confirmGenerateBtn').scrollIntoView({behavior:'smooth', block:'center'});return false;">定位到「步骤三-五：确认并生成」</a>
+                    <a class="card-link" href="#" onclick="document.getElementById('subtitleSampleText').scrollIntoView({behavior:'smooth', block:'center'});return false;">定位到「字幕预览与参数区」</a>
+                </div>
             </div>
         </div>
     </div>

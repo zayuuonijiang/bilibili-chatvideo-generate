@@ -7,84 +7,94 @@
     <title>${title}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --panel-bg: rgba(255, 255, 255, 0.68);
+            --panel-border: rgba(255, 255, 255, 0.5);
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.15);
+        }
         body {
             font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
             min-height: 100vh;
-            color: #e6edf3;
+            color: var(--text-main);
             background:
-                linear-gradient(135deg, rgba(5,10,25,0.9), rgba(10,20,50,0.9)),
-                url('${pageContext.request.contextPath}/static/bg-placeholder.jpg') center/cover no-repeat fixed;
+                linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.18)),
+                url('${pageContext.request.contextPath}/api/background/current') center center / cover no-repeat fixed;
         }
-        .app-layout { display:flex; min-height:100vh; backdrop-filter: blur(6px); }
+        .app-layout { display:flex; min-height:100vh; background: rgba(255,255,255,0.08); }
         .sidebar {
-            width:230px; padding:1.5rem 1.25rem;
-            background: linear-gradient(190deg, rgba(15,23,42,0.78), rgba(15,23,42,0.55));
-            border-right: 1px solid rgba(148,163,184,0.35);
+            width:240px; padding:1.5rem 1.1rem;
+            background: rgba(236, 244, 255, 0.72);
+            border-right: 1px solid rgba(255,255,255,0.55);
             display:flex; flex-direction:column; gap:1.5rem;
             position: sticky; top: 0; align-self:flex-start; height:100vh; overflow-y:auto;
-            backdrop-filter: blur(14px);
+            backdrop-filter: blur(12px);
+            box-shadow: 8px 0 30px rgba(15, 23, 42, 0.08);
         }
         .sidebar-header { display:flex; align-items:center; gap:0.75rem; }
         .sidebar-logo { width:32px; height:32px; border-radius:999px; background: radial-gradient(circle at 30% 30%, #38bdf8, #6366f1); }
-        .sidebar-title { font-size:1rem; font-weight:700; color:#fff; }
-        .nav-section-title { font-size:0.75rem; color:#e5e7eb; letter-spacing:0.08em; margin-bottom:0.25rem; }
+        .sidebar-title { font-size:1rem; font-weight:700; color:#0f172a; }
+        .nav-section-title { font-size:0.75rem; color:#475569; letter-spacing:0.08em; margin-bottom:0.25rem; }
         .nav-group { display:flex; flex-direction:column; gap:0.3rem; }
         .nav-link {
             display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem;
-            border-radius:999px; color:#fff; font-weight:600; text-decoration:none; font-size:0.88rem;
+            border-radius:10px; color:#1e293b; font-weight:600; text-decoration:none; font-size:0.88rem;
             transition: all 0.2s;
         }
-        .nav-link:hover { background: linear-gradient(90deg, rgba(56,189,248,0.12), rgba(129,140,248,0.12)); transform: translateX(2px); }
-        .nav-link-active { background: linear-gradient(90deg, rgba(56,189,248,0.25), rgba(129,140,248,0.25)); }
-        .nav-footer { margin-top:auto; font-size:0.75rem; color:#64748b; }
+        .nav-link:hover { background: rgba(255,255,255,0.65); transform: translateX(2px); }
+        .nav-link-active { background: rgba(255,255,255,0.9); color:#111827; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12); }
+        .nav-footer { margin-top:auto; font-size:0.75rem; color:#334155; }
 
-        .main { flex:1; padding:1.75rem 2rem; display:flex; flex-direction:column; }
-        .main-header { margin-bottom:1.25rem; }
-        .main-title { font-size:1.4rem; font-weight:700; color:#fff; }
-        .main-subtitle { margin-top:0.35rem; color:#9ca3af; font-size:0.9rem; }
+        .main { flex:1; padding:1.6rem 1.8rem; display:flex; flex-direction:column; gap:1rem; }
+        .main-header { margin-bottom:0; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 14px; padding:1rem 1.25rem; backdrop-filter: blur(10px); box-shadow: var(--shadow-soft); }
+        .main-title { font-size:1.25rem; font-weight:700; color:var(--text-main); }
+        .main-subtitle { margin-top:0.35rem; color:var(--text-sub); font-size:0.9rem; }
 
         .row { display:flex; flex-wrap:wrap; gap:1rem; align-items:stretch; }
         .col { flex:1 1 420px; display:flex; }
         .card {
-            background: rgba(15,23,42,0.82);
-            border-radius:16px; border:1px solid rgba(148,163,184,0.35);
-            box-shadow: 0 24px 80px rgba(15,23,42,0.9);
+            background: var(--panel-bg);
+            border-radius:16px; border:1px solid var(--panel-border);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(12px);
             padding:1.5rem 1.6rem; display:flex; flex-direction:column; flex:1;
             min-height:760px;
         }
-        .card h2 { font-size:1.02rem; color:#fff; margin-bottom:0.75rem; }
-        .sub { color:#9ca3af; font-size:0.9rem; margin-bottom:0.9rem; }
-        label { display:block; margin-bottom:0.35rem; color:#9ca3af; font-size:0.9rem; }
+        .card h2 { font-size:1.02rem; color:var(--text-main); margin-bottom:0.75rem; }
+        .sub { color:var(--text-sub); font-size:0.9rem; margin-bottom:0.9rem; }
+        label { display:block; margin-bottom:0.35rem; color:var(--text-sub); font-size:0.9rem; }
         input[type="text"] {
             width:100%; padding:0.5rem 0.75rem; margin-bottom:0.9rem; border-radius:8px;
-            border:1px solid rgba(148,163,184,0.55); background: rgba(15,23,42,0.92); color:#e5e7eb;
+            border:1px solid rgba(203,213,225,0.95); background: rgba(255,255,255,0.9); color:#0f172a;
         }
         .list-actions { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.3rem; }
         .btn {
-            padding:0.45rem 0.9rem; background:#fff; color:#111827; border:1px solid rgba(209,213,219,0.9);
-            border-radius:999px; font-size:0.84rem; font-weight:600; cursor:pointer; margin:0;
+            padding:0.45rem 0.9rem; background:rgba(255,255,255,0.95); color:#111827; border:1px solid rgba(203,213,225,0.95);
+            border-radius:10px; font-size:0.84rem; font-weight:600; cursor:pointer; margin:0;
         }
         .btn-danger { background:#fef2f2; color:#991b1b; border-color:#fecaca; }
         .msg { margin-top:0.5rem; font-size:0.85rem; display:none; }
-        .msg.err { color:#fca5a5; }
-        .msg.ok { color:#4ade80; }
+        .msg.err { color:#b91c1c; }
+        .msg.ok { color:#166534; }
 
-        .table-wrap { margin-top:0.75rem; border:1px solid rgba(148,163,184,0.35); border-radius:10px; overflow:auto; flex:1; min-height:0; }
+        .table-wrap { margin-top:0.75rem; border:1px solid rgba(203,213,225,0.95); border-radius:10px; overflow:auto; flex:1; min-height:0; background: rgba(255,255,255,0.86); }
         table { width:100%; border-collapse:collapse; min-width:760px; }
-        th, td { padding:0.55rem 0.65rem; border-bottom:1px solid rgba(148,163,184,0.2); text-align:left; color:#e5e7eb; font-size:0.86rem; }
-        th { position:sticky; top:0; background: rgba(30,41,59,0.95); color:#cbd5e1; z-index:2; }
+        th, td { padding:0.55rem 0.65rem; border-bottom:1px solid rgba(226,232,240,0.95); text-align:left; color:#0f172a; font-size:0.86rem; }
+        th { position:sticky; top:0; background: rgba(248,250,252,0.95); color:#334155; z-index:2; }
         .mono { font-family: Consolas, "Courier New", monospace; }
         .title-cell { max-width:420px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .op-actions { display:flex; gap:0.35rem; white-space:nowrap; }
 
-        .preview-wrap { margin-top:0.75rem; border:1px solid rgba(148,163,184,0.35); border-radius:10px; padding:0.5rem; background: rgba(15,23,42,0.92); }
-        .preview-title { font-size:0.85rem; color:#9ca3af; margin-bottom:0.45rem; }
+        .preview-wrap { margin-top:0.75rem; border:1px solid rgba(203,213,225,0.95); border-radius:10px; padding:0.5rem; background: rgba(255,255,255,0.86); }
+        .preview-title { font-size:0.85rem; color:#334155; margin-bottom:0.45rem; }
         #previewVideo { width:100%; max-height:300px; background:#000; border-radius:8px; }
 
         @media (max-width: 900px) {
             .app-layout { flex-direction:column; }
             .sidebar { width:100%; flex-direction:row; align-items:center; justify-content:space-between; padding:0.75rem 1rem; }
             .nav-group { flex-direction:row; flex-wrap:wrap; }
+            .nav-link { border-radius:8px; }
             .main { padding:1.25rem 1.25rem 1.75rem; }
             .card { min-height:auto; }
         }

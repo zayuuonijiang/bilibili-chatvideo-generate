@@ -8,30 +8,36 @@
     <title>接口功能测试 - /test</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --panel-bg: rgba(255, 255, 255, 0.68);
+            --panel-border: rgba(255, 255, 255, 0.5);
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.15);
+        }
         body {
             font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
             min-height: 100vh;
-            color: #e6edf3;
+            color: var(--text-main);
             background:
-                    linear-gradient(135deg, rgba(5,10,25,0.9), rgba(10,20,50,0.9)),
-                    url('${pageContext.request.contextPath}/static/bg-placeholder.jpg') center/cover no-repeat fixed;
+                    linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.18)),
+                    url('${pageContext.request.contextPath}/api/background/current') center center / cover no-repeat fixed;
         }
         .app-layout {
             display: flex;
             min-height: 100vh;
-            backdrop-filter: blur(6px);
+            background: rgba(255,255,255,0.08);
         }
         .sidebar {
-            width: 230px;
-            padding: 1.5rem 1.25rem;
-            background: linear-gradient(190deg,
-                    rgba(15,23,42,0.78),
-                    rgba(15,23,42,0.55));
-            border-right: 1px solid rgba(148,163,184,0.35);
+            width: 240px;
+            padding: 1.5rem 1.1rem;
+            background: rgba(236, 244, 255, 0.72);
+            border-right: 1px solid rgba(255,255,255,0.55);
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            backdrop-filter: blur(14px);
+            backdrop-filter: blur(12px);
+            box-shadow: 8px 0 30px rgba(15, 23, 42, 0.08);
         }
         .sidebar-header {
             display: flex;
@@ -48,11 +54,11 @@
             font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.03em;
-            color: #ffffff;
+            color: #0f172a;
         }
         .nav-section-title {
             font-size: 0.75rem;
-            color: #e5e7eb;
+            color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 0.25rem;
@@ -67,8 +73,8 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 0.75rem;
-            border-radius: 999px;
-            color: #ffffff;
+            border-radius: 10px;
+            color: #1e293b;
             font-weight: 600;
             text-decoration: none;
             font-size: 0.88rem;
@@ -78,36 +84,44 @@
             flex: 1;
         }
         .nav-link:hover {
-            background: linear-gradient(90deg, rgba(56,189,248,0.12), rgba(129,140,248,0.12));
+            background: rgba(255,255,255,0.65);
             transform: translateX(2px);
         }
         .nav-link-active {
-            background: linear-gradient(90deg, rgba(56,189,248,0.25), rgba(129,140,248,0.25));
-            color: #f9fafb;
+            background: rgba(255,255,255,0.9);
+            color: #111827;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
         }
         .nav-footer {
             margin-top: auto;
             font-size: 0.75rem;
-            color: #64748b;
+            color: #334155;
         }
         .main {
             flex: 1;
-            padding: 1.75rem 2rem;
+            padding: 1.6rem 1.8rem;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
         }
         .main-header {
-            margin-bottom: 1.25rem;
+            margin-bottom: 0;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-soft);
         }
         .main-title {
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--text-main);
         }
         .main-subtitle {
             margin-top: 0.35rem;
             font-size: 0.9rem;
-            color: #9ca3af;
+            color: var(--text-sub);
         }
         .main-content {
             flex: 1;
@@ -117,27 +131,28 @@
         h1 {
             font-size: 1.5rem;
             margin-bottom: 1.2rem;
-            color: #ffffff;
+            color: var(--text-main);
             font-weight: 700;
         }
         .card {
-            background: rgba(15,23,42,0.82);
+            background: var(--panel-bg);
             border-radius: 16px;
             padding: 1.5rem 1.6rem;
             margin-bottom: 1.5rem;
-            border: 1px solid rgba(148,163,184,0.35);
-            box-shadow: 0 24px 80px rgba(15,23,42,0.9);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(12px);
         }
-        .card h2 { font-size: 1rem; color: #ffffff; font-weight: 600; margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.35rem; color: #9ca3af; font-size: 0.9rem; }
+        .card h2 { font-size: 1rem; color: var(--text-main); font-weight: 600; margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.35rem; color: var(--text-sub); font-size: 0.9rem; }
         input[type="file"], textarea, select {
             width: 100%;
             padding: 0.5rem 0.75rem;
             margin-bottom: 1rem;
             border-radius: 8px;
-            border: 1px solid rgba(148,163,184,0.55);
-            background: rgba(15,23,42,0.92);
-            color: #e5e7eb;
+            border: 1px solid rgba(203,213,225,0.95);
+            background: rgba(255,255,255,0.9);
+            color: #0f172a;
             font-size: 0.95rem;
         }
         textarea { min-height: 80px; resize: vertical; }
@@ -145,25 +160,25 @@
         .btn {
             display: inline-block;
             padding: 0.6rem 1.2rem;
-            background: #ffffff;
+            background: rgba(255,255,255,0.95);
             color: #111827;
             font-weight: 600;
-            border: 1px solid rgba(209,213,219,0.9);
-            border-radius: 999px;
+            border: 1px solid rgba(203,213,225,0.95);
+            border-radius: 10px;
             cursor: pointer;
             font-size: 0.9rem;
             box-shadow: 0 0 0 rgba(15,23,42,0);
             transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, background-color 0.18s ease-out, color 0.18s ease-out;
         }
         .btn:hover {
-            transform: scale(1.04);
-            box-shadow: 0 14px 38px rgba(15,23,42,0.55);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(15,23,42,0.12);
             background: #f9fafb;
         }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow:none; }
         .msg { margin-top: 1rem; font-size: 0.9rem; }
-        .msg.err { color: #fca5a5; }
-        .msg.ok { color: #4ade80; }
+        .msg.err { color: #b91c1c; }
+        .msg.ok { color: #166534; }
         #resultAudio { margin-top: 1rem; width: 100%; }
         @media (max-width: 900px) {
             .app-layout {
@@ -181,7 +196,7 @@
                 flex-wrap: wrap;
             }
             .nav-link {
-                border-radius: 999px;
+                border-radius: 8px;
                 padding: 0.35rem 0.7rem;
                 font-size: 0.8rem;
             }
