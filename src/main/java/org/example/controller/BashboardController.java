@@ -7,6 +7,11 @@ import org.example.pojo.SubtitleStyleConfig;
 import org.example.service.BashboardService;
 import org.example.service.ZhihuService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,12 +30,16 @@ public class BashboardController {
 
     private final BashboardService bashboardService;
     private final ZhihuService zhihuService;
+    private final Object qaManageLock = new Object();
 
     @Value("${app.storage.qa-file:runtime-data/QA.txt}")
     private String qaFilePath;
 
     @Value("${app.storage.qa-legacy-file:src/main/resources/QA.txt}")
     private String qaLegacyFilePath;
+
+    @Value("${app.storage.result-dir:Result}")
+    private String resultDirPath;
 
     /**
      * 仪表盘首页。
@@ -39,6 +48,143 @@ public class BashboardController {
     public String bashboardPage(Model model) {
         model.addAttribute("title", "知乎问答跑酷视频生成 - 仪表盘");
         return "bashboard";
+    }
+
+    /**
+     * QA 文本管理页。
+     */
+    @GetMapping("/zhihu")
+    public String zhihuPage(Model model) {
+        model.addAttribute("title", "QA 文本管理 - 仪表盘风格");
+        return "zhihu";
+    }
+
+    /**
+     * 视频管理页。
+     */
+    @GetMapping("/video-manage")
+    public String videoManagePage(Model model) {
+        model.addAttribute("title", "视频管理 - 仪表盘风格");
+        return "video-manage";
+    }
+
+    /**
+     * 视频管理：查询 Result 目录下以 _sub 结尾的 mp4 文件，支持标题模糊搜索。
+     */
+    @GetMapping(value = "/api/video/manage/list", produces = "application/json")
+    @ResponseBody
+    public Result<java.util.List<java.util.Map<String, String>>> listManagedVideos(
+            @RequestParam(value = "keyword", required = false) String keyword
+    ) {
+        java.nio.file.Path resultDir = java.nio.file.Paths.get(resultDirPath);
+        java.util.List<java.util.Map<String, String>> list = new java.util.ArrayList<>();
+        if (!java.nio.file.Files.exists(resultDir) || !java.nio.file.Files.isDirectory(resultDir)) {
+            return Result.ok(list);
+        }
+
+        String kw = keyword == null ? "" : keyword.trim().toLowerCase(java.util.Locale.ROOT);
+        try (java.util.stream.Stream<java.nio.file.Path> stream = java.nio.file.Files.list(resultDir)) {
+            java.util.List<java.nio.file.Path> files = stream
+                    .filter(java.nio.file.Files::isRegularFile)
+                    .filter(p -> {
+                        String name = p.getFileName().toString().toLowerCase(java.util.Locale.ROOT);
+                        return name.endsWith("_sub.mp4");
+                    })
+                    .sorted((a, b) -> {
+                        try {
+                            java.nio.file.attribute.FileTime ta = java.nio.file.Files.getLastModifiedTime(a);
+                            java.nio.file.attribute.FileTime tb = java.nio.file.Files.getLastModifiedTime(b);
+                            return tb.compareTo(ta);
+                        } catch (Exception e) {
+                            return b.getFileName().toString().compareToIgnoreCase(a.getFileName().toString());
+                        }
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+
+            int idx = 1;
+            for (java.nio.file.Path p : files) {
+                String fileName = p.getFileName().toString();
+                String title = fileName.substring(0, fileName.length() - "_sub.mp4".length());
+                if (!kw.isEmpty()) {
+                    String titleLower = title.toLowerCase(java.util.Locale.ROOT);
+                    String idxStr = String.valueOf(idx);
+                    if (!titleLower.contains(kw) && !idxStr.contains(kw)) {
+                        idx++;
+                        continue;
+                    }
+                }
+                java.util.Map<String, String> item = new java.util.LinkedHashMap<>();
+                item.put("index", String.valueOf(idx));
+                item.put("title", title);
+                item.put("fileName", fileName);
+                try {
+                    item.put("sizeBytes", String.valueOf(java.nio.file.Files.size(p)));
+                    item.put("modifiedTime", java.nio.file.Files.getLastModifiedTime(p).toString());
+                } catch (Exception ignore) {
+                    item.put("sizeBytes", "0");
+                    item.put("modifiedTime", "");
+                }
+                list.add(item);
+                idx++;
+            }
+            return Result.ok(list);
+        } catch (Exception e) {
+            log.warn("视频管理列表读取失败", e);
+            return Result.fail(500, "读取视频列表失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 视频管理：删除指定文件。
+     */
+    @PostMapping(value = "/api/video/manage/delete", produces = "application/json")
+    @ResponseBody
+    public Result<Void> deleteManagedVideo(@RequestParam("fileName") String fileName) {
+        String safeName = fileName == null ? "" : fileName.trim();
+        if (safeName.isEmpty()) {
+            return Result.fail(400, "删除失败：fileName 不能为空");
+        }
+        if (!safeName.toLowerCase(java.util.Locale.ROOT).endsWith("_sub.mp4")) {
+            return Result.fail(400, "删除失败：仅允许删除 _sub.mp4 文件");
+        }
+
+        java.nio.file.Path resultDir = java.nio.file.Paths.get(resultDirPath).toAbsolutePath().normalize();
+        java.nio.file.Path target = resultDir.resolve(safeName).normalize();
+        if (!target.startsWith(resultDir)) {
+            return Result.fail(400, "删除失败：非法路径");
+        }
+        if (!java.nio.file.Files.exists(target)) {
+            return Result.fail(404, "删除失败：文件不存在");
+        }
+        try {
+            java.nio.file.Files.delete(target);
+            return Result.ok();
+        } catch (Exception e) {
+            log.warn("删除视频失败, file={}", safeName, e);
+            return Result.fail(500, "删除失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 视频管理：预览指定 mp4 文件。
+     */
+    @GetMapping(value = "/api/video/manage/preview")
+    public ResponseEntity<Resource> previewManagedVideo(@RequestParam("fileName") String fileName) {
+        String safeName = fileName == null ? "" : fileName.trim();
+        if (safeName.isEmpty() || !safeName.toLowerCase(java.util.Locale.ROOT).endsWith("_sub.mp4")) {
+            return ResponseEntity.badRequest().build();
+        }
+        java.nio.file.Path resultDir = java.nio.file.Paths.get(resultDirPath).toAbsolutePath().normalize();
+        java.nio.file.Path target = resultDir.resolve(safeName).normalize();
+        if (!target.startsWith(resultDir) || !java.nio.file.Files.exists(target) || !java.nio.file.Files.isRegularFile(target)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource resource = new FileSystemResource(target.toFile());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + safeName.replace("\"", "") + "\"")
+                .contentType(MediaType.parseMediaType("video/mp4"))
+                .body(resource);
     }
 
     /**
@@ -186,6 +332,17 @@ public class BashboardController {
     }
 
     /**
+     * QA 管理页复用的知乎热榜抓取接口。
+     */
+    @PostMapping(value = "/api/zhihu/hot-qa", produces = "application/json")
+    @ResponseBody
+    public Result<java.util.List<java.util.Map<String, String>>> fetchHotQaForManage(
+            @RequestParam("cookie") String cookie
+    ) {
+        return fetchHotQa(cookie);
+    }
+
+    /**
      * 右侧：从 QA.txt 中读取所有已持久化的问题及回答，用于“总览”展示。
      */
     @GetMapping(value = "/api/bashboard/qa/overview", produces = "application/json")
@@ -293,6 +450,162 @@ public class BashboardController {
             return Result.fail(500, "更新书签失败：" + e.getMessage());
         }
         return Result.ok();
+    }
+
+    /**
+     * QA 管理：列表查询（支持按 index / title 模糊搜索）。
+     */
+    @GetMapping(value = "/api/zhihu/qa/list", produces = "application/json")
+    @ResponseBody
+    public Result<java.util.List<java.util.Map<String, String>>> listQaManage(
+            @RequestParam(value = "keyword", required = false) String keyword
+    ) {
+        java.nio.file.Path path = resolveQaPathForWrite();
+        try {
+            java.util.List<java.util.Map<String, String>> raw = readQaManageRecords(path);
+            java.util.List<java.util.Map<String, String>> list = new java.util.ArrayList<>();
+            String kw = keyword == null ? "" : keyword.trim();
+            String kwLower = kw.toLowerCase(java.util.Locale.ROOT);
+            for (int i = 0; i < raw.size(); i++) {
+                java.util.Map<String, String> item = raw.get(i);
+                String idx = String.valueOf(i + 1);
+                String title = item.getOrDefault("title", "");
+                if (!kw.isEmpty()) {
+                    boolean hitIndex = idx.contains(kw);
+                    boolean hitTitle = title.toLowerCase(java.util.Locale.ROOT).contains(kwLower);
+                    if (!hitIndex && !hitTitle) {
+                        continue;
+                    }
+                }
+                java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
+                out.put("index", idx);
+                out.put("questionId", item.getOrDefault("questionId", ""));
+                out.put("title", title);
+                out.put("answerContent", item.getOrDefault("answerContent", ""));
+                out.put("bookmarked", item.getOrDefault("bookmarked", "false"));
+                list.add(out);
+            }
+            return Result.ok(list);
+        } catch (Exception e) {
+            log.warn("QA 管理列表读取失败", e);
+            return Result.fail(500, "读取 QA 列表失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * QA 管理：新增一条记录。
+     */
+    @PostMapping(value = "/api/zhihu/qa/create", produces = "application/json")
+    @ResponseBody
+    public Result<java.util.Map<String, String>> createQaManage(
+            @RequestParam(value = "questionId", required = false) String questionId,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "answerContent", required = false) String answerContent,
+            @RequestParam(value = "bookmarked", required = false) String bookmarked
+    ) {
+        String qid = questionId == null ? "" : questionId.trim();
+        String t = title == null ? "" : title.trim();
+        String answer = answerContent == null ? "" : answerContent.trim();
+        String bm = "true".equalsIgnoreCase(bookmarked) ? "true" : "false";
+        if (qid.isEmpty() && t.isEmpty() && answer.isEmpty()) {
+            return Result.fail(400, "新增失败：questionId、title、answerContent 不能同时为空");
+        }
+
+        java.nio.file.Path path = resolveQaPathForWrite();
+        synchronized (qaManageLock) {
+            try {
+                java.util.List<java.util.Map<String, String>> all = readQaManageRecords(path);
+                java.util.Map<String, String> m = new java.util.LinkedHashMap<>();
+                m.put("questionId", qid);
+                m.put("title", t);
+                m.put("answerContent", answer);
+                m.put("bookmarked", bm);
+                all.add(m);
+                writeQaManageRecords(path, all);
+
+                java.util.Map<String, String> resp = new java.util.LinkedHashMap<>();
+                resp.put("index", String.valueOf(all.size()));
+                resp.put("questionId", qid);
+                resp.put("title", t);
+                resp.put("answerContent", answer);
+                resp.put("bookmarked", bm);
+                return Result.ok(resp);
+            } catch (Exception e) {
+                log.warn("QA 管理新增失败", e);
+                return Result.fail(500, "新增失败：" + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * QA 管理：按 index 更新记录。
+     */
+    @PostMapping(value = "/api/zhihu/qa/update", produces = "application/json")
+    @ResponseBody
+    public Result<java.util.Map<String, String>> updateQaManage(
+            @RequestParam("index") Integer index,
+            @RequestParam(value = "questionId", required = false) String questionId,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "answerContent", required = false) String answerContent,
+            @RequestParam(value = "bookmarked", required = false) String bookmarked
+    ) {
+        if (index == null || index <= 0) {
+            return Result.fail(400, "更新失败：index 必须是大于 0 的整数");
+        }
+        java.nio.file.Path path = resolveQaPathForWrite();
+        synchronized (qaManageLock) {
+            try {
+                java.util.List<java.util.Map<String, String>> all = readQaManageRecords(path);
+                int i = index - 1;
+                if (i < 0 || i >= all.size()) {
+                    return Result.fail(400, "更新失败：index 超出范围");
+                }
+                java.util.Map<String, String> m = all.get(i);
+                m.put("questionId", questionId == null ? "" : questionId.trim());
+                m.put("title", title == null ? "" : title.trim());
+                m.put("answerContent", answerContent == null ? "" : answerContent.trim());
+                m.put("bookmarked", "true".equalsIgnoreCase(bookmarked) ? "true" : "false");
+                writeQaManageRecords(path, all);
+
+                java.util.Map<String, String> resp = new java.util.LinkedHashMap<>();
+                resp.put("index", String.valueOf(index));
+                resp.put("questionId", m.getOrDefault("questionId", ""));
+                resp.put("title", m.getOrDefault("title", ""));
+                resp.put("answerContent", m.getOrDefault("answerContent", ""));
+                resp.put("bookmarked", m.getOrDefault("bookmarked", "false"));
+                return Result.ok(resp);
+            } catch (Exception e) {
+                log.warn("QA 管理更新失败", e);
+                return Result.fail(500, "更新失败：" + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * QA 管理：按 index 删除记录。
+     */
+    @PostMapping(value = "/api/zhihu/qa/delete", produces = "application/json")
+    @ResponseBody
+    public Result<Void> deleteQaManage(@RequestParam("index") Integer index) {
+        if (index == null || index <= 0) {
+            return Result.fail(400, "删除失败：index 必须是大于 0 的整数");
+        }
+        java.nio.file.Path path = resolveQaPathForWrite();
+        synchronized (qaManageLock) {
+            try {
+                java.util.List<java.util.Map<String, String>> all = readQaManageRecords(path);
+                int i = index - 1;
+                if (i < 0 || i >= all.size()) {
+                    return Result.fail(400, "删除失败：index 超出范围");
+                }
+                all.remove(i);
+                writeQaManageRecords(path, all);
+                return Result.ok();
+            } catch (Exception e) {
+                log.warn("QA 管理删除失败", e);
+                return Result.fail(500, "删除失败：" + e.getMessage());
+            }
+        }
     }
 
     /**
@@ -648,6 +961,96 @@ public class BashboardController {
             return "";
         }
         return line.substring(idx + 1).trim();
+    }
+
+    private java.util.List<java.util.Map<String, String>> readQaManageRecords(java.nio.file.Path path) throws java.io.IOException {
+        java.util.List<java.util.Map<String, String>> result = new java.util.ArrayList<>();
+        if (!java.nio.file.Files.exists(path)) {
+            return result;
+        }
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        String content = new String(java.nio.file.Files.readAllBytes(path), java.nio.charset.StandardCharsets.UTF_8);
+        if (content.startsWith("\uFEFF")) {
+            content = content.substring(1);
+        }
+        String trimmed = content.trim();
+        if (trimmed.isEmpty()) {
+            return result;
+        }
+
+        // 先兼容 JSON 数组结构。
+        if (trimmed.startsWith("[")) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode arr = mapper.readTree(trimmed);
+                if (arr.isArray()) {
+                    for (com.fasterxml.jackson.databind.JsonNode node : arr) {
+                        result.add(jsonNodeToQaMap(node));
+                    }
+                    return result;
+                }
+            } catch (Exception e) {
+                log.warn("QA 管理读取：按 JSON 数组解析失败，回退逐行解析, path={}", path.toAbsolutePath(), e);
+            }
+        }
+
+        // 关键修复：QA.txt 是 JSONL（每行一个 JSON），这里必须逐行解析，避免只读第一条。
+        java.util.List<String> lines = java.nio.file.Files.readAllLines(path, java.nio.charset.StandardCharsets.UTF_8);
+        for (String rawLine : lines) {
+            String line = rawLine == null ? "" : rawLine.trim();
+            if (line.startsWith("\uFEFF")) {
+                line = line.substring(1).trim();
+            }
+            if (line.isEmpty()) {
+                continue;
+            }
+            try {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, String> m = mapper.readValue(line, java.util.LinkedHashMap.class);
+                result.add(normalizeQaMap(m));
+            } catch (Exception e) {
+                // 管理页面只处理 JSON 行，非 JSON 行忽略
+                log.warn("QA 管理读取：忽略非 JSON 行, line={}", line);
+            }
+        }
+
+        // 如果逐行未读到记录，最后再尝试把整文件当作单个 JSON 对象解析一次。
+        if (result.isEmpty() && trimmed.startsWith("{")) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(trimmed);
+                if (node.isObject() && (node.has("questionId") || node.has("title") || node.has("answerContent"))) {
+                    result.add(jsonNodeToQaMap(node));
+                }
+            } catch (Exception e) {
+                log.warn("QA 管理读取：按单对象解析失败, path={}", path.toAbsolutePath(), e);
+            }
+        }
+
+        return result;
+    }
+
+    private void writeQaManageRecords(
+            java.nio.file.Path path,
+            java.util.List<java.util.Map<String, String>> records
+    ) throws java.io.IOException {
+        java.nio.file.Path parent = path.getParent();
+        if (parent != null) {
+            java.nio.file.Files.createDirectories(parent);
+        }
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        try (java.io.BufferedWriter writer = java.nio.file.Files.newBufferedWriter(
+                path,
+                java.nio.charset.StandardCharsets.UTF_8,
+                java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+        )) {
+            if (records == null) {
+                return;
+            }
+            for (java.util.Map<String, String> m : records) {
+                writer.write(mapper.writeValueAsString(normalizeQaMap(m)));
+                writer.newLine();
+            }
+        }
     }
 }
 

@@ -212,6 +212,12 @@
                 <a href="${pageContext.request.contextPath}/bashboard" class="nav-link">
                     <span>跑酷生成仪表盘</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/zhihu" class="nav-link">
+                    <span>QA 文本管理</span>
+                </a>
+                <a href="${pageContext.request.contextPath}/video-manage" class="nav-link">
+                    <span>视频管理</span>
+                </a>
                 <a href="${pageContext.request.contextPath}/test" class="nav-link">
                     <span>接口与合成测试</span>
                 </a>
@@ -232,6 +238,8 @@
                 <p class="welcome"><c:out value="${welcome}"/></p>
                 <div class="links">
                     <a href="${pageContext.request.contextPath}/bashboard">进入跑酷生成仪表盘</a>
+                    <a href="${pageContext.request.contextPath}/zhihu">打开 QA 文本管理</a>
+                    <a href="${pageContext.request.contextPath}/video-manage">打开视频管理</a>
                     <a href="${pageContext.request.contextPath}/test">查看 TTS / FFmpeg 测试页</a>
                     <a href="${pageContext.request.contextPath}/api/hello" target="_blank">接口测试 /api/hello</a>
                     <a href="${pageContext.request.contextPath}/api/error-test" target="_blank">异常测试 /api/error-test</a>

@@ -226,6 +226,12 @@
                 <a href="${pageContext.request.contextPath}/bashboard" class="nav-link nav-link-active">
                     <span>跑酷生成仪表盘</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/zhihu" class="nav-link">
+                    <span>QA 文本管理</span>
+                </a>
+                <a href="${pageContext.request.contextPath}/video-manage" class="nav-link">
+                    <span>视频管理</span>
+                </a>
                 <a href="${pageContext.request.contextPath}/test" class="nav-link">
                     <span>接口与合成测试</span>
                 </a>
